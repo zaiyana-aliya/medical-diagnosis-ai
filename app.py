@@ -167,9 +167,14 @@ def should_retry(state: DiagnosisState):
 def medicine_agent(state: DiagnosisState):
     try:
         disease_name = state["retrieved_diseases"][0].split("\n")[0].replace("Disease: ", "")
-        with DDGS() as ddgs:
-            results = list(ddgs.text(f"medicines treatment for {disease_name}", max_results=3))
-        medicine_info =  "\n".join([r.get("body", "") for r in results[:2] if r.get("body")])
+        import requests
+        response = requests.post(
+            "https://google.serper.dev/search",
+            json={"q": f"medicines treatment for {disease_name}"},
+            headers={"X-API-KEY": os.getenv("SERPER_API_KEY")}
+        )
+        results = response.json().get("organic", [])
+        medicine_info = "\n".join([r.get("snippet", "") for r in results[:2]])
         return {"medicines": medicine_info}
     except:
         return {"medicines": "Please consult a doctor for medication advice."}
