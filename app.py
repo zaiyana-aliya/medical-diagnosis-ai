@@ -176,8 +176,8 @@ def medicine_agent(state: DiagnosisState):
         results = response.json().get("organic", [])
         medicine_info = "\n".join([r.get("snippet", "") for r in results[:2]])
         return {"medicines": medicine_info}
-    except:
-        return {"medicines": "Please consult a doctor for medication advice."}
+    except Exception as e:
+        return {"medicines": f"Error: {str(e)}"}
 
 # Agent 5: Final Summarizer Agent
 def summarizer_agent(state: DiagnosisState):
