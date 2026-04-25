@@ -7,7 +7,7 @@ from langchain_community.embeddings import FakeEmbeddings
 from langchain_core.documents import Document
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, List
-from ddgs import DDGS
+from duckduckgo_search import DDGS
 from diseases import DISEASES
 
 load_dotenv()
