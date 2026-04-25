@@ -15,13 +15,6 @@ DISEASES = [
         "severity": "moderate"
     },
     {
-        "name": "COVID-19",
-        "symptoms": "fever, cough, shortness of breath, loss of taste, loss of smell, fatigue, body aches, headache",
-        "description": "Infectious disease caused by SARS-CoV-2 virus",
-        "treatment": "Rest, isolation, antiviral medications, oxygen if severe",
-        "severity": "moderate to severe"
-    },
-    {
         "name": "Pneumonia",
         "symptoms": "cough with phlegm, fever, chills, difficulty breathing, chest pain, fatigue, nausea",
         "description": "Infection that inflames air sacs in lungs",
