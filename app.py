@@ -284,6 +284,7 @@ if user_input:
                 "final_summary": ""
             }
             result = graph.invoke(initial_state)
+            st.session_state['last_medicine'] = result.get('medicines', '')
             from datetime import datetime
             st.session_state.symptom_history.append({
                     "symptom": user_input,
@@ -330,13 +331,11 @@ if user_input:
 
 if 'last_user_input' in st.session_state:
     if st.button("💊 Get Medicine Information", key="med_btn"):
-        medicine_info = result.get('medicines', '')
-        if medicine_info and medicine_info != "Please consult a doctor for medication advice.":
+        if 'last_medicine' in st.session_state:
             st.success("💊 Medicine Information:")
-            st.write(medicine_info)
+            st.write(st.session_state['last_medicine'])
         else:
             st.info("Please consult a doctor for medication advice.")
-
 
 if 'response' in locals():
     st.session_state.chat_history.append({"role": "assistant", "content": response})
