@@ -166,16 +166,17 @@ def should_retry(state: DiagnosisState):
 # Agent 4: Medicine Search Agent
 def medicine_agent(state: DiagnosisState):
     try:
-        disease_name = state["retrieved_diseases"][0].split("\n")[0].replace("Disease: ", "")
+        diseases = state["retrieved_diseases"]
+        disease_name = diseases[0].replace("(", "").replace(")", "").replace(" ", "_").strip() if diseases else "fever"
         import requests
-        response = requests.post(
-            "https://google.serper.dev/search",
-            json={"q": f"medicines treatment for {disease_name}"},
-            headers={"X-API-KEY": os.getenv("SERPER_API_KEY")}
-        )
-        results = response.json().get("organic", [])
-        medicine_info = "\n".join([r.get("snippet", "") for r in results[:2]])
-        return {"medicines": medicine_info}
+        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{disease_name.replace(' ', '_')}"
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            medicine_info = data.get("extract", "")[:500]
+            return {"medicines": medicine_info}
+        else:
+            return {"medicines": "Please consult a doctor for medication advice."}
     except Exception as e:
         return {"medicines": f"Error: {str(e)}"}
 
@@ -329,18 +330,16 @@ if user_input:
 
 if 'last_user_input' in st.session_state:
     if st.button("💊 Get Medicine Information", key="med_btn"):
-        with st.spinner("Searching medicines..."):
-            try:
-                with DDGS() as ddgs:
-                    query = st.session_state['last_user_input']
-                    med_results = list(ddgs.text(f"medicines treatment for {query}", max_results=3))
-                if med_results:
-                    st.success("💊 Medicine Information:")
-                    for r in med_results[:2]:
-                        st.write(r.get("body", ""))
-                else:
-                    st.info("Please consult a doctor for medication advice.")
-            except:
-                st.info("Please consult a doctor for medication advice.")
-    if 'response' in locals():
-        st.session_state.chat_history.append({"role": "assistant", "content": response})
+        medicine_info = result.get('medicines', '')
+        if medicine_info and medicine_info != "Please consult a doctor for medication advice.":
+            st.success("💊 Medicine Information:")
+            st.write(medicine_info)
+        else:
+            st.info("Please consult a doctor for medication advice.")
+
+
+if 'response' in locals():
+    st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+if 'response' in locals():
+    st.session_state.chat_history.append({"role": "assistant", "content": response})
