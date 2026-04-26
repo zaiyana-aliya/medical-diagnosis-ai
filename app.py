@@ -167,19 +167,42 @@ def should_retry(state: DiagnosisState):
 def medicine_agent(state: DiagnosisState):
     try:
         diseases = state["retrieved_diseases"]
-        disease_name = diseases[0].replace("(", "").replace(")", "").replace(" ", "_").strip() if diseases else "fever"
-        import requests
-        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{disease_name.replace(' ', '_')}"
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            medicine_info = data.get("extract", "")[:500]
-            return {"medicines": medicine_info}
-        else:
-            return {"medicines": "Please consult a doctor for medication advice."}
-    except Exception as e:
-        return {"medicines": f"Error: {str(e)}"}
-
+        disease = diseases[0] if diseases else ""
+        
+        medicine_map = {
+            "Influenza": "Rest, drink fluids, take Paracetamol or Ibuprofen for fever. Antiviral: Oseltamivir (Tamiflu). Consult doctor if symptoms worsen.",
+            "Common Cold": "Rest, fluids, Vitamin C. OTC: Paracetamol, Cetirizine for congestion. No antibiotics needed.",
+            "Pneumonia": "Antibiotics (Amoxicillin), rest, fluids. Seek immediate medical attention.",
+            "Sinusitis": "Nasal saline spray, decongestants, Ibuprofen. Antibiotics if bacterial.",
+            "Migraine": "Paracetamol, Ibuprofen, Sumatriptan. Rest in dark quiet room.",
+            "Tension Headache": "Paracetamol 500mg or Ibuprofen 400mg. Rest, hydration, stress management.",
+            "Gastritis": "Antacids, Omeprazole, avoid spicy food. Consult doctor.",
+            "Irritable Bowel": "Fiber diet, antispasmodics, stress management. Consult gastroenterologist.",
+            "Deep Vein Thrombosis": "Anticoagulants (Heparin, Warfarin). Seek immediate medical attention.",
+            "Depression": "SSRIs (Fluoxetine), therapy, lifestyle changes. Consult psychiatrist.",
+            "Dengue": "Rest, fluids, Paracetamol. NO Aspirin or Ibuprofen. Hospitalization if severe.",
+            "Malaria": "Antimalarials: Chloroquine, Artemisinin. Seek immediate medical care.",
+            "Typhoid": "Antibiotics: Ciprofloxacin, Azithromycin. Rest and fluids.",
+            "Asthma": "Bronchodilators (Salbutamol inhaler), corticosteroids. Avoid triggers.",
+            "Hypertension": "Amlodipine, Enalapril, lifestyle changes. Regular monitoring.",
+            "Diabetes": "Metformin, insulin if needed. Diet control, exercise, monitoring.",
+            "Urinary Tract": "Antibiotics: Nitrofurantoin, Trimethoprim. Drink plenty of water.",
+            "Anxiety": "SSRIs, CBT therapy, relaxation techniques. Consult psychiatrist.",
+            "Arthritis": "NSAIDs, physiotherapy, weight management. Consult rheumatologist.",
+            "Anemia": "Iron supplements, Vitamin B12, folic acid. Dietary changes.",
+            "Migraine": "Sumatriptan, Paracetamol, rest in dark room. Avoid triggers.",
+            "Chickenpox": "Antihistamines for itching, Acyclovir antiviral. Keep skin clean.",
+            "Sleep Apnea": "CPAP machine, weight loss, avoid alcohol. Consult sleep specialist.",
+            "Pleuritis": "NSAIDs for pain, treat underlying cause. Rest and deep breathing.",
+        }
+        
+        for key, medicine in medicine_map.items():
+            if key.lower() in disease.lower():
+                return {"medicines": medicine}
+        
+        return {"medicines": f"For {disease}: Consult a qualified doctor for appropriate medication and treatment plan."}
+    except:
+        return {"medicines": "Please consult a doctor for medication advice."}
 # Agent 5: Final Summarizer Agent
 def summarizer_agent(state: DiagnosisState):
     prompt = f"""You are a medical AI assistant. Based on the vector database analysis, provide a structured diagnosis.
@@ -294,9 +317,9 @@ if user_input:
             response = result["final_summary"]
             severity_line = [line for line in response.split('\n') if 'severity' in line.lower()]
             severity_text = severity_line[0].lower() if severity_line else ""
-            if any(word in severity_text for word in ["high", "severe", "critical", "emergency", "moderate to severe"]):
+            if any(word in severity_text for word in ["high", "critical", "emergency", "severe - emergency"]):
                 st.error("🔴 SEVERITY: HIGH — Please seek immediate medical attention!")
-            elif any(word in severity_text for word in ["moderate"]):
+            elif any(word in severity_text for word in ["moderate to severe", "moderate"]):
                 st.warning("🟡 SEVERITY: MODERATE — Consult a doctor soon")
             else:
                 st.success("🟢 SEVERITY: MILD — Monitor symptoms at home")
